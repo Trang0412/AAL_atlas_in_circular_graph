@@ -4,8 +4,7 @@
 
 ### This code is to visualize effective connectivity in circular layout with AAL atlas. ###
 
-
-![An example of connectivity when a person hearing the words indicating the animal](./sample/example_graph.png) 
+<img src="./sample/example_graph.png" width=50% height=50%>
 
 [Link to interactive version, have to download to see html file](https://htmlpreview.github.io/?https://github.com/Trang0412/AAL_atlas_in_circular_graph/blob/master/sample/listening_animal_106_133_ms.html)
 
