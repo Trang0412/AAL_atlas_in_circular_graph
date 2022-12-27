@@ -1,0 +1,4 @@
+[core]
+	excludesfile = %(prefix)///203.250.66.197/eeg
+	excludesfile = %(prefix)///203.250.66.197/eeg/EEG_BCI/2. Word decoding/1. Temporal dynamic decoding/code/python/classification/xgboost
+	excludesfile = %(prefix)///203.250.66.197/eeg/EEG_BCI/2. Word decoding/1. Temporal dynamic decoding/learning/pytorch-Deep-Learning
