@@ -48,17 +48,17 @@ def create_renderers(x, y, start_node, end_node, steps, weight, color_mapper):
   Create an edge between start_node and end_node using Segments for MultiLine to plot edge with multi color
 
   Inputs: 
-    - x: x-coordinate of the nodes in the graph
-    - y: y-coordinate of tthe nodes in the graph
-    - start_node: index of the start node in the graph 
-    - end_node: index of the end node in the graph 
-    - steps: list of steps for create segments
-    - weight: weight of the edge
-    - color_mapper: list of colors for the segments in the edges, has same len with the number of steps
+    - x (list): x-coordinate of the nodes in the graph
+    - y (list): y-coordinate of tthe nodes in the graph
+    - start_node (int): index of the start node in the graph 
+    - end_node (int): index of the end node in the graph 
+    - steps (list): list of steps for create segments
+    - weight (int): weight of the edge
+    - color_mapper (list): list of colors for the segments in the edges, has same length with the number of steps
     
   Returns: 
-    - data_source: bokeh.models.ColumnDataSource
-    - glyph: a MultiLine object from bokeh.models
+    - data_source: bokeh.models.ColumnDataSource, for current edge
+    - glyph: bokeh.models.glyph, a MultiLine object for current edge from 
     
   """
 # create a renderer for the nodes
