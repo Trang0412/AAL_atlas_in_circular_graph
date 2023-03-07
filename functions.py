@@ -34,7 +34,7 @@ import networkx
 import numpy as np
 
 from bokeh.io import output_notebook, show, save
-from bokeh.models import Range1d, Circle, ColumnDataSource, MultiLine, LinearColorMapper, Label, ColorBar
+from bokeh.models import Range1d, Circle, Rect, ColumnDataSource, MultiLine, LinearColorMapper, Label, ColorBar
 from bokeh.plotting import figure, from_networkx, output_file, save
 from bokeh.palettes import  Turbo256, Greys256, Inferno256, Viridis256
 from bokeh.transform import linear_cmap
@@ -81,7 +81,7 @@ def create_renderers(x, y, start_node, end_node, steps, weight, color_mapper):
 
   return data_source, glyph
 
-def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color_palette):
+def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette):
   """
   Function to plot the interactive directed connectivity graph of a semantic network.
 
@@ -105,12 +105,25 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
   # in other words, regions which do not have connection to other regions then it has connection to itself
   to_int = graph_df['to'].values.copy()
   for i in range(len(to_int)):
-      if pd.isna(to_int[i]) == False:
-          to_int[i] = layout_df.set_index('from').loc[to_int[i]]['from_int']
-      else:
-          to_int[i] = graph_df.set_index('from').iloc[i]['from_int']
+    if pd.isna(to_int[i]) == False:
+      to_int[i] = layout_df.set_index('from').loc[to_int[i]]['from_int']
+    else:
+      to_int[i] = graph_df.set_index('from').iloc[i]['from_int']
+
   graph_df['to'] = to_int
 
+  orig_weights = graph_df['weights'].values.copy()
+  new_weights = graph_df['weights'].values.copy()
+  for r_idx in range(len(graph_df)):
+    if graph_df.iloc[r_idx]['from_int'] == graph_df.iloc[r_idx]['to']:
+      continue
+
+    if (graph_df.iloc[r_idx]['from_int'] not in language_df['from_int']) or (graph_df.iloc[r_idx]['to'] not in language_df['from_int']):
+      new_weights[r_idx] = float('Nan')
+  graph_df['weights'] = new_weights
+
+
+  
   G = networkx.OrderedDiGraph()
   G.add_nodes_from(np.arange(len(layout_df)))
   G.add_edges_from((u,v) for (u,v) in zip(graph_df['from_int'].values, graph_df['to'].values))
@@ -147,6 +160,7 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
   network_graph.node_renderer.glyph = Circle(size=size_by_this_attribute,
   fill_color = linear_cmap(color_by_this_attribute, color_palette, minimum_value_color, maximum_value_color))
 
+  # network_graph.node_renderer.glyph = Rect(height = 0.5, width=0.5, fill_color = linear_cmap(color_by_this_attribute, color_palette, minimum_value_color, maximum_value_color))
 
   plot.renderers.append(network_graph)
 
@@ -165,18 +179,25 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
   # for normalizing edge weight to z-score for visualization
   conn_weight_mean = conn_df['weights'].mean()
   conn_weight_std = conn_df['weights'].std()
+  edge_thickness = 2
   for start_node, end_node,_ in G.edges(data=True):  
     if start_node == end_node:
       continue
-    conn_weigth = G[start_node][end_node]['weight']
-    edge_width = ( (conn_weigth-conn_weight_mean)/conn_weight_std + 2 if np.isnan(conn_weigth)==False else conn_weigth ) 
-    ds1, line1 = create_renderers(x, y, start_node, end_node, steps, edge_width, color_mapper)
-    plot.add_glyph(ds1, line1)
+
+    # plot only connection between language-related regions
+    if (start_node in language_df['from_int'] and end_node in language_df['from_int']) == False:
+      # ds1, line1 = create_renderers(x, y, start_node, end_node, steps, float('NaN'), color_mapper)
+      # plot.add_glyph(ds1, line1)
+      continue
+    else:   
+      conn_weigth = G[start_node][end_node]['weight']
+      edge_width = ( (conn_weigth-conn_weight_mean)/conn_weight_std + edge_thickness if np.isnan(conn_weigth)==False else conn_weigth ) 
+      ds1, line1 = create_renderers(x, y, start_node, end_node, steps, edge_width, color_mapper)
+      plot.add_glyph(ds1, line1)
 
   # plot.add_layout(color_bar, 'right')
 
   #% Add labels and adjust x_offset and y_offset for label according to each node's position
-  centroid_df = pd.DataFrame(pd.concat([conn_df['from'], conn_df['to']]).drop_duplicates(inplace=False), columns=["centroids"])
   nodes_index = network_graph.node_renderer.data_source.data['index']
 
   x,y = zip(*network_graph.layout_provider.graph_layout.values()) # get coordinate for each node as anchor for node's label
@@ -185,10 +206,29 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
   inter_index = [np.where(labels_angles>90)[0][0],np.where(labels_angles<=270)[0][-1]]
   labels_angles[inter_index[0]:inter_index[1]] = labels_angles[inter_index[0]:inter_index[1]] +180
 
-  # only show labels for nodes that have connection to other nodes
+
+  # centroid_df = pd.DataFrame(pd.concat([conn_df['from'], conn_df['to']]).drop_duplicates(inplace=False), columns=["name"])
+  # nodes_df = pd.merge(centroid_df, language_df, how='inner', on='name') 
+  # # only show labels for nodes that have connection to other nodes
+  # node_labels=[]
+  # for i in nodes_index:
+  #   if layout_df.loc[i]['from'] in nodes_df['name'].values:
+  #     node_labels.append(layout_df.loc[i]['from'])
+  #   else:
+  #     node_labels.append('')
+
+  # only show labels for language-related nodes that have connection to other nodes
+  drop_idx = []
+  for i in range(len(conn_df)):
+    if (conn_df.iloc[i]['from'] not in language_df['name'].values) or (conn_df.iloc[i]['to'] not in language_df['name'].values):
+      drop_idx.append(i)
+
+  conn_df.drop(drop_idx, inplace=True)
+  centroid_df = pd.DataFrame(pd.concat([conn_df['from'], conn_df['to']]).drop_duplicates(inplace=False), columns=["name"])
+  nodes_df = pd.merge(centroid_df, language_df, how='inner', on='name') 
   node_labels=[]
   for i in nodes_index:
-    if layout_df.loc[i]['from'] in centroid_df['centroids'].values:
+    if i in nodes_df['from_int'].values:
       node_labels.append(layout_df.loc[i]['from'])
     else:
       node_labels.append('')
@@ -202,6 +242,17 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
     background_fill_color=None, 
     text_font_size='10px', text_font_style='bold') 
     plot.renderers.append(label)
+
+
+# # Turn off node_labels
+#   for i in range(len(x)):
+#     label = Label(x=x[i], y=y[i], text=' ', 
+#     x_offset=layout_df['x_offset'].values[i], 
+#     y_offset=layout_df['y_offset'].values[i], 
+#     angle=labels_angles[i], angle_units='deg',
+#     background_fill_color=None, 
+#     text_font_size='10px', text_font_style='bold') 
+#     plot.renderers.append(label)
 
 
   # #%%
@@ -221,3 +272,5 @@ def plot_conn_graph(layout_df, conn_df, path_save, plot_fname, plot_title, color
   save(plot)
 
   return plot
+
+
