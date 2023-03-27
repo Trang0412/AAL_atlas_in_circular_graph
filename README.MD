@@ -6,7 +6,7 @@
 
 <img src="./sample/example_graph.png" width=50% height=50%>
 
-[Link to interactive version, have to download to see html file](https://htmlpreview.github.io/?https://github.com/Trang0412/AAL_atlas_in_circular_graph/blob/master/sample/listening_animal_106_133_ms.html)
+[Link to interactive version, have to download to see html file](https://htmlpreview.github.io/?https://github.com/Trang0412/AAL_atlas_in_circular_graph/blob/master/sample/listening_animal_all_time_with_labels_changed_appearance.html)
 
 * Regions belong to same lobe have same color (currenlty using Turbo256 color palette). 
 
