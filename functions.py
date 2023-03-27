@@ -40,8 +40,11 @@ from bokeh.palettes import  Turbo256, Greys256, Inferno256, Viridis256
 from bokeh.transform import linear_cmap
 
 # make a curved plot between 2 nodes
+# def bezier(start, end, control, steps):
+#   return [(1-s)**2*start + 2*(1-s)*s*control + s**2*end for s in steps]
+
 def bezier(start, end, control, steps):
-  return [(1-s)**2*start + 2*(1-s)*s*control + s**2*end for s in steps]
+    return [(1-s)**1.5*start + 4*(1-s)*s*control + s**1.5*end for s in steps]
 
 def create_renderers(x, y, start_node, end_node, steps, weight, color_mapper):
   """
@@ -172,8 +175,13 @@ def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot
 
   # get coordinate for each node to generate curve between 2 nodes
   x,y = zip(*network_graph.layout_provider.graph_layout.values()) 
-  steps = [i/100. for i in range(100)]
-  color_mapper = list(color_palette)[::2][:99]
+  # steps = [i/100. for i in range(100)]
+  
+  color_palette_edge = Inferno256
+  nColorPoints = 220
+  steps = [i/220. for i in range(nColorPoints)]
+  # color_mapper = list(color_palette_edge)[::2][:99]
+  color_mapper = list(color_palette_edge)
   color_bar = ColorBar(color_mapper=LinearColorMapper(palette=tuple(color_mapper)))
 
   # for normalizing edge weight to z-score for visualization
@@ -244,15 +252,15 @@ def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot
     plot.renderers.append(label)
 
 
-# # Turn off node_labels
-#   for i in range(len(x)):
-#     label = Label(x=x[i], y=y[i], text=' ', 
-#     x_offset=layout_df['x_offset'].values[i], 
-#     y_offset=layout_df['y_offset'].values[i], 
-#     angle=labels_angles[i], angle_units='deg',
-#     background_fill_color=None, 
-#     text_font_size='10px', text_font_style='bold') 
-#     plot.renderers.append(label)
+# Turn off node_labels
+  # for i in range(len(x)):
+  #   label = Label(x=x[i], y=y[i], text=' ', 
+  #   x_offset=layout_df['x_offset'].values[i], 
+  #   y_offset=layout_df['y_offset'].values[i], 
+  #   angle=labels_angles[i], angle_units='deg',
+  #   background_fill_color=None, 
+  #   text_font_size='10px', text_font_style='bold') 
+  #   plot.renderers.append(label)
 
 
   # #%%

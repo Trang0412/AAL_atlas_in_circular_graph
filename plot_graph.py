@@ -34,8 +34,9 @@ from bokeh.palettes import Turbo256
 import pandas as pd
 
 color_palette = Turbo256
+color_palette_edge = Inferno256
 
-tasks = ['listening', 'imagined', 'overt']
+tasks = ['listening', 'imagined']
 # tasks = [ 'overt']
 word_sems = ['face', 'number', 'animal']
 fwhm = 'fwhm25' # gaussian's fwhm 
@@ -49,9 +50,10 @@ fname_atlas = 'groupSIFT_atlas.xlsx'
 layout_xls = pd.ExcelFile(path_atlas + fname_atlas)
 
 layout_df = pd.read_excel(layout_xls, "for_circular_layout")
-layout_df.rename(columns={'Regions': 'from'}, inplace=True) # change name of columns
+layout_df.rename(columns={'Name': 'from'}, inplace=True) # change name of columns
 
-language_df = pd.read_excel(layout_xls, "language_network") # plot only regions in language network
+# language_df = pd.read_excel(layout_xls, "language_network") # plot only regions in language network
+language_df = pd.read_excel(layout_xls, "for_circular_layout") # plot all connections
 language_df.rename(columns={'Name': 'name'}, inplace=True) # change name of columns
 language_df['from_int'] = list(range(len(language_df))) # add interger index for each regions
 language_df.dropna(inplace=True)
@@ -69,8 +71,8 @@ def main_sem(option=2):
     for taski in range(len(tasks)):
       
       # path to save figures
-      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      # path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + 'rv_lessthan_0.15' + '\\'
+      # path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\subtract_task_ERP\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
+      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + 'rv_lessthan_0.15' + '\\'
 
       # Time window to check depends on task
       if taski==0:
@@ -82,15 +84,17 @@ def main_sem(option=2):
     
       for semi in range(len(word_sems)):
         # Load connectivity file
-        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
+        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\subtract_task_ERP\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
+        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole\\' + word_sems[semi] + '\\' + fwhm + '\\'
+        
         # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\'
         fname_conn = 'Conn_for_graph.xlsx'
         conn_file = pd.ExcelFile(path_conn + fname_conn)
 
         for timei in range(len(time_wins)):
           # title for graph and file to be saved
-          plot_title = tasks[taski] + ': ' + word_sems[semi] + ', ' + str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms_language_network_' 
-          plot_fname = tasks[taski] + '_' + word_sems[semi] + '_' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms_language_network_.html' 
+          plot_title = tasks[taski] + ': ' + word_sems[semi] + ', ' + str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms' 
+          plot_fname = tasks[taski] + '_' + word_sems[semi] + '_' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms_turn_off_label_changed_appearance.html' 
           conn_df = pd.read_excel(conn_file, "time_win_" + str(timei+1))
           conn_df.dropna(inplace=True)
           plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
@@ -104,14 +108,19 @@ def main_sem(option=2):
     for taski in range(len(tasks)):
       # path to save figures
       # path_save = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      path_save = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
+      # path_save = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
+      # path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\subtract_task_ERP\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
+      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + 'rv_lessthan_0.15' + '\\'
       
       for semi in range(len(word_sems)):       
-        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
-        fname_conn = 'individualSubjectConnectivity_useGFWER.xlsx'
+        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
+        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\subtract_task_ERP\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
+        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole\\' + word_sems[semi] + '\\' + fwhm + '\\'
+        
+        fname_conn = 'individualSubjectConnectivity.xlsx'
         conn_file = pd.ExcelFile(path_conn + fname_conn)
-        plot_title = tasks[taski] + ': ' + word_sems[semi] + ' all time language network' 
-        plot_fname = tasks[taski] + '_' + word_sems[semi] + '_all_time_language_network.html' 
+        plot_title =  tasks[taski] + ': ' + word_sems[semi] + ' all time' 
+        plot_fname =  tasks[taski] + '_' + word_sems[semi] + '_all_time_with_labels_changed_appearance.html' 
         conn_df = pd.read_excel(conn_file, "connectivity")
         conn_df.dropna(inplace=True)
         plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
@@ -181,4 +190,4 @@ def main_task(option=1):
 #%% Run funtion
 if __name__ == "__main__":
     # main_task(option=2)
-    main_sem(option=1)
+    main_sem(option=2)

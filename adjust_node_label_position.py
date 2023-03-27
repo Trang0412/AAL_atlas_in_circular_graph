@@ -26,8 +26,8 @@ color_palette = Turbo256
 path_atlas = 'X:\\EEG_BCI\\2. Word decoding\\1. Temporal dynamic decoding\\code\\python\\semantic_processing\\graph_visualization\\'
 fname = 'groupSIFT_atlas.xlsx'
 xls = pd.ExcelFile(path_atlas + fname)
-# layout_df = pd.read_excel(xls, "for_circular_layout")
-layout_df = pd.read_excel(xls, "language_network")
+layout_df = pd.read_excel(xls, "for_circular_layout")
+# layout_df = pd.read_excel(xls, "language_network")
 xls.close()
 layout_df['from_int'] = list(range(len(layout_df))) # add interger index for each regions
 layout_df.rename(columns={'Name': 'from'}, inplace=True) # change name of columns
