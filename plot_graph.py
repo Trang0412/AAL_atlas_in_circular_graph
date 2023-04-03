@@ -229,7 +229,7 @@ def main_task(option, IC_chosen_scheme, labels_option):
         del saved_df
         del nodes_degree
 
-      del path_conn
+        del path_conn
 
 
 
@@ -237,5 +237,5 @@ def main_task(option, IC_chosen_scheme, labels_option):
 #%% Run funtion
 if __name__ == "__main__":
     IC_chosen_scheme = 'brain_ICs_with_rv'
-    main_task(2, IC_chosen_scheme)
-    main_sem(2, IC_chosen_scheme)
+    main_task(2, IC_chosen_scheme, 1)
+    main_sem(2, IC_chosen_scheme, 1)
