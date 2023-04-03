@@ -64,16 +64,15 @@ layout_df.dropna(inplace=True)
 
 
 #%% define functions here
-def main_sem(option=2):
+def main_sem(option, IC_chosen_scheme, labels_option):
 
     # Plot network graph for each time window of interested resulted from cluster t-test on scalp data for temporal dynamic decoding
   if option == 1:
     for taski in range(len(tasks)):
       
       # path to save figures
-      # path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\subtract_task_ERP\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + 'rv_lessthan_0.15' + '\\'
-
+      path_save_fifgure = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + IC_chosen_scheme + '\\'
+      path_save_degree = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\' + IC_chosen_scheme + '\\' 
       # Time window to check depends on task
       if taski==0:
         time_wins = [ [106, 133], [196, 231], [352, 407], [458, 485] ]
@@ -84,104 +83,152 @@ def main_sem(option=2):
     
       for semi in range(len(word_sems)):
         # Load connectivity file
-        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\subtract_task_ERP\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
-        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole\\' + word_sems[semi] + '\\' + fwhm + '\\'
-        
-        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\'
+        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\' +IC_chosen_scheme + '\\' + word_sems[semi] + '\\' + fwhm + '\\'
         fname_conn = 'Conn_for_graph.xlsx'
         conn_file = pd.ExcelFile(path_conn + fname_conn)
 
-        for timei in range(len(time_wins)):
-          # title for graph and file to be saved
-          plot_title = tasks[taski] + ': ' + word_sems[semi] + ', ' + str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms' 
-          plot_fname = tasks[taski] + '_' + word_sems[semi] + '_' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms_turn_off_label_changed_appearance.html' 
-          conn_df = pd.read_excel(conn_file, "time_win_" + str(timei+1))
-          conn_df.dropna(inplace=True)
-          plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
+        fname_degree = 'time_win_nodes_degree_' + word_sems[semi] + '.xlsx'
+        with pd.ExcelWriter(path_conn + fname_degree) as writer:
+          
+          for timei in range(len(time_wins)):
+            # title for graph and file to be saved
+            plot_title = tasks[taski] + ': ' + IC_chosen_scheme + word_sems[semi] + ', ' + str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms' 
+
+            if labels_option == 0:
+              plot_fname =   tasks[taski] + '_' + IC_chosen_scheme +  word_sems[semi] + '_' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) +  '_ms_turn_off_labels.html' 
+            else:
+              plot_fname = tasks[taski] + '_' + IC_chosen_scheme +  word_sems[semi] + '_' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms.html' 
+  
+            conn_df = pd.read_excel(conn_file, "time_win_" + str(timei+1))
+            conn_df.dropna(inplace=True)
+            _, nodes_degree = plot_conn_graph(layout_df, conn_df, language_df, labels_option, path_save_fifgure, plot_fname, plot_title, color_palette)
+
+            # save the degree for each time window
+            nodes_degree = dict(zip(layout_df['from'], nodes_degree.values()))
+            saved_df = pd.DataFrame.from_dict(nodes_degree, orient = 'index', columns=['weight'])
+            saved_df.to_excel(writer, sheet_name = 'timewin_' + str(timei))
+            del saved_df
 
         # close the connectivity file for the current semantic group
         conn_file.close()
+
         del path_conn
 
   else: 
     #% Plot network graph all time data generated from groupSIFT as individual*.xlsx file 
     for taski in range(len(tasks)):
       # path to save figures
-      # path_save = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      # path_save = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      # path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\subtract_task_ERP\\all_ICs\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + 'rv_lessthan_0.15' + '\\'
+      path_save = path_analysis + '\\semantic_processing\\'  + tasks[taski] +  '\\figure\\connectivity\\' + IC_chosen_scheme + '\\'
+      path_save_degree = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\' + IC_chosen_scheme + '\\'       
+      fname_degree = 'all_time_nodes_degree_' + tasks[taski] + '.xlsx'
       
-      for semi in range(len(word_sems)):       
-        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
-        # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\subtract_task_ERP\\onlySingleDipole_all_ICs\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
-        path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole\\' + word_sems[semi] + '\\' + fwhm + '\\'
-        
-        fname_conn = 'individualSubjectConnectivity.xlsx'
-        conn_file = pd.ExcelFile(path_conn + fname_conn)
-        plot_title =  tasks[taski] + ': ' + word_sems[semi] + ' all time' 
-        plot_fname =  tasks[taski] + '_' + word_sems[semi] + '_all_time_with_labels_changed_appearance.html' 
-        conn_df = pd.read_excel(conn_file, "connectivity")
-        conn_df.dropna(inplace=True)
-        plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
-        # plot_conn_graph_language_net(layout_df, conn_df, path_save, plot_fname, plot_title, color_palette)
-        conn_file.close()
-        del path_conn
+      with pd.ExcelWriter(path_save_degree + fname_degree) as writer:
+        for semi in range(len(word_sems)):       
+          path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\' + IC_chosen_scheme+'\\' + word_sems[semi] + '\\' + fwhm + '\\'
+          fname_conn = 'individualSubjectConnectivity.xlsx'
+          conn_file = pd.ExcelFile(path_conn + fname_conn)
+          plot_title =  tasks[taski] + ': '+ IC_chosen_scheme + word_sems[semi] + ' all time' 
+          if labels_option == 0:
+            plot_fname =  tasks[taski] + '_' + IC_chosen_scheme + '_' + word_sems[semi] + '_all_time_turn_off_labels.html' 
+          else:
+            plot_fname =  tasks[taski] + '_' +  IC_chosen_scheme + '_' + word_sems[semi] + '_all_time.html' 
+
+          conn_df = pd.read_excel(conn_file, "connectivity")
+          conn_df.dropna(inplace=True)
+          _, nodes_degree = plot_conn_graph(layout_df, conn_df, language_df, labels_option, path_save, plot_fname, plot_title, color_palette)
+          # plot_conn_graph_language_net(layout_df, conn_df, path_save, plot_fname, plot_title, color_palette)
+          conn_file.close()
+          # save the degree 
+          nodes_degree = dict(zip(layout_df['from'], nodes_degree.values()))
+          saved_df = pd.DataFrame.from_dict(nodes_degree, orient = 'index', columns=['weight'])
+          # saved_df = saved_df.transpose()
+          saved_df.to_excel(writer, sheet_name = word_sems[semi])
+          del saved_df
+          
+          del path_conn
 
     
 
-def main_task(option=1):
+def main_task(option, IC_chosen_scheme, labels_option):
 
   # Plot network graph for each time window of interested resulted from cluster t-test on scalp data for temporal dynamic decoding
   if option == 1:
     for taski in range(len(tasks)):
-      #%%
-      # path to save figures
-      path_save = path_analysis + 'task_processing\\' + '\\figure\\' + tasks[taski]  + '\\connectivity\\' 
-
       # Time window to check depends on task
       if taski==0:
         time_wins = [ [106, 133], [196, 231], [352, 407], [458, 485] ]
       elif taski == 1:
-        time_wins = [ [63, 134], [173, 243], [274, 325], [446, 477], [580, 657] ]
+        time_wins = [ [63, 134], [173, 243], [274, 325], [446, 477]]
       else:  
-        time_wins = [ [137, 177], [189, 216], [240, 302], [384, 497], [560, 689] ]
-    
+        time_wins = [ [137, 177], [189, 216], [240, 302], [384, 497]]
+  
+
+      # path to save figures
+      path_save_figure = path_analysis + 'task_processing\\' + '\\figure\\' + tasks[taski]  + '\\connectivity\\' 
 
       # Load connectivity file
       # path_conn = path_analysis + 'semantic_processing\\'  + tasks[taski] +  '\\groupSIFT\\onlySingleDipole\\' + word_sems[semi] + '\\' + fwhm + '\\p_' + str(p_value) + '\\'
-      path_conn = path_analysis + 'task_processing\\groupSIFT\\' + tasks[taski] +  '\\onlySingleDipole_all_ICs\\' 
+      path_conn = path_analysis + 'task_processing\\groupSIFT\\' + tasks[taski] +  '\\' + IC_chosen_scheme +'\\' 
       fname_conn = 'Conn_for_graph.xlsx'
-      conn_file = pd.ExcelFile(path_conn + fname_conn)
+      conn_file = pd.ExcelFile(path_conn + fname_conn)    
 
-      for timei in range(len(time_wins)):
-        # title for graph and file to be saved
-        plot_title = tasks[taski] + ' all ICs: ' +  str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms' 
-        plot_fname = tasks[taski] + '_all_ICs' + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms.html' 
-        conn_df = pd.read_excel(conn_file, "time_win_" + str(timei+1))
-        conn_df.dropna(inplace=True)
-        plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
+      path_save_degree = path_analysis + 'task_processing\\groupSIFT\\' + tasks[taski] + '\\'  
+      fname_degree = 'time_win_nodes_degree_' + IC_chosen_scheme + '.xlsx'
+      with pd.ExcelWriter(path_save_degree + fname_degree) as writer:
+        for timei in range(len(time_wins)):
+          # title for graph and file to be saved
+          plot_title = tasks[taski] + IC_chosen_scheme + ': ' +  str(time_wins[timei][0]) + '-' + str(time_wins[timei][1]) + ' ms' 
+          if labels_option == 0:
+            plot_fname = tasks[taski] + IC_chosen_scheme + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms_turn_off_labels.html' 
+          else:
+            plot_fname = tasks[taski] + IC_chosen_scheme + str(time_wins[timei][0]) + '_' + str(time_wins[timei][1]) + '_ms.html' 
+          conn_df = pd.read_excel(conn_file, "time_win_" + str(timei+1))
+          conn_df.dropna(inplace=True)
+          _, nodes_degree = plot_conn_graph(layout_df, conn_df, language_df, labels_option, path_save_figure, plot_fname, plot_title, color_palette)
+
+          # save the degree 
+          nodes_degree = dict(zip(layout_df['from'], nodes_degree.values()))
+          saved_df = pd.DataFrame.from_dict(nodes_degree, orient = 'index', columns=['weight'])
+          # saved_df = saved_df.transpose()
+          saved_df.to_excel(writer, sheet_name = 'timewin_' + str(timei))
+          del saved_df
+          del nodes_degree
 
       # close the connectivity file for the current semantic group
       conn_file.close()
+
+      
       del path_conn
 #%%
   else: 
     #% Plot network graph all time data generated from groupSIFT as individual*.xlsx file 
-    for taski in range(len(tasks)):
-      #%% path to save figures
-      path_save = path_analysis + 'task_processing\\' + '\\figure\\' + tasks[taski]  + '\\connectivity\\' 
-        
-      path_conn = path_analysis + 'task_processing\\groupSIFT\\' + tasks[taski] +  '\\onlySingleDipole_all_brain_ICs\\' 
-      fname_conn = 'individualSubjectConnectivity_0.05.xlsx'
-      conn_file = pd.ExcelFile(path_conn + fname_conn)
-      plot_title = tasks[taski] + ' all brain ICs' 
-      plot_fname = tasks[taski] + '_all_brain_ICs_all_time_language_network.html' 
-      conn_df = pd.read_excel(conn_file, "connectivity")
-      conn_df.dropna(inplace=True)
-      plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette)
-      # plot_conn_graph_language_net(layout_df, conn_df, path_save, plot_fname, plot_title, color_palette)
-      conn_file.close()
+    path_save_degree = path_analysis + 'task_processing\\groupSIFT\\' 
+    fname_degree = 'all_time_nodes_degree_' + IC_chosen_scheme + '.xlsx'
+    with pd.ExcelWriter(path_save_degree + fname_degree) as writer:
+      for taski in range(len(tasks)):
+        #% path to save figures
+        path_save_figure = path_analysis + 'task_processing\\' + '\\figure\\' + tasks[taski]  + '\\connectivity\\' 
+
+        path_conn = path_analysis + 'task_processing\\groupSIFT\\' + tasks[taski] +  '\\' + IC_chosen_scheme + '\\' 
+        fname_conn = 'individualSubjectConnectivity.xlsx'
+        conn_file = pd.ExcelFile(path_conn + fname_conn)
+        plot_title = tasks[taski] + IC_chosen_scheme
+        if labels_option == 0:
+          plot_fname = tasks[taski] + IC_chosen_scheme + '_all_time_turn_off_labels.html' 
+        else:
+          plot_fname = tasks[taski] + IC_chosen_scheme + '_all_time.html' 
+        conn_df = pd.read_excel(conn_file, "connectivity")
+        conn_df.dropna(inplace=True)
+        _, nodes_degree = plot_conn_graph(layout_df, conn_df, language_df, labels_option,  path_save_figure, plot_fname, plot_title, color_palette)
+
+        conn_file.close()
+        # save the degree        
+        nodes_degree = dict(zip(layout_df['from'], nodes_degree.values()))
+        saved_df = pd.DataFrame.from_dict(nodes_degree, orient = 'index', columns=['weight'])
+        saved_df.to_excel(writer, sheet_name = tasks[taski])
+        del saved_df
+        del nodes_degree
+
       del path_conn
 
 
@@ -189,5 +236,6 @@ def main_task(option=1):
 
 #%% Run funtion
 if __name__ == "__main__":
-    # main_task(option=2)
-    main_sem(option=2)
+    IC_chosen_scheme = 'brain_ICs_with_rv'
+    main_task(2, IC_chosen_scheme)
+    main_sem(2, IC_chosen_scheme)

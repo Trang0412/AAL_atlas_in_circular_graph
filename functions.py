@@ -84,7 +84,7 @@ def create_renderers(x, y, start_node, end_node, steps, weight, color_mapper):
 
   return data_source, glyph
 
-def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot_title, color_palette):
+def plot_conn_graph(layout_df, conn_df, language_df, labels_option, path_save, plot_fname, plot_title, color_palette):
   """
   Function to plot the interactive directed connectivity graph of a semantic network.
 
@@ -234,33 +234,36 @@ def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot
   conn_df.drop(drop_idx, inplace=True)
   centroid_df = pd.DataFrame(pd.concat([conn_df['from'], conn_df['to']]).drop_duplicates(inplace=False), columns=["name"])
   nodes_df = pd.merge(centroid_df, language_df, how='inner', on='name') 
-  node_labels=[]
-  for i in nodes_index:
-    if i in nodes_df['from_int'].values:
-      node_labels.append(layout_df.loc[i]['from'])
+
+  if labels_option ==0:
+  # Turn off node_labels
+    for i in range(len(x)):
+      label = Label(x=x[i], y=y[i], text=' ', 
+      x_offset=layout_df['x_offset'].values[i], 
+      y_offset=layout_df['y_offset'].values[i], 
+      angle=labels_angles[i], angle_units='deg',
+      background_fill_color=None, 
+      text_font_size='10px', text_font_style='bold') 
+      plot.renderers.append(label)
     else:
-      node_labels.append('')
+      # only dispaly labels of nodes which have connections to other nodes
+      node_labels=[]
+      for i in nodes_index:
+        if i in nodes_df['from_int'].values:
+          node_labels.append(layout_df.loc[i]['from'])
+        else:
+          node_labels.append('')
 
-  # node_labels = layout_df['from']
-  for i in range(len(x)):
-    label = Label(x=x[i], y=y[i], text=node_labels[i], 
-    x_offset=layout_df['x_offset'].values[i], 
-    y_offset=layout_df['y_offset'].values[i], 
-    angle=labels_angles[i], angle_units='deg',
-    background_fill_color=None, 
-    text_font_size='10px', text_font_style='bold') 
-    plot.renderers.append(label)
+      # node_labels = layout_df['from']
+      for i in range(len(x)):
+        label = Label(x=x[i], y=y[i], text=node_labels[i], 
+        x_offset=layout_df['x_offset'].values[i], 
+        y_offset=layout_df['y_offset'].values[i], 
+        angle=labels_angles[i], angle_units='deg',
+        background_fill_color=None, 
+        text_font_size='10px', text_font_style='bold') 
+        plot.renderers.append(label)
 
-
-# Turn off node_labels
-  # for i in range(len(x)):
-  #   label = Label(x=x[i], y=y[i], text=' ', 
-  #   x_offset=layout_df['x_offset'].values[i], 
-  #   y_offset=layout_df['y_offset'].values[i], 
-  #   angle=labels_angles[i], angle_units='deg',
-  #   background_fill_color=None, 
-  #   text_font_size='10px', text_font_style='bold') 
-  #   plot.renderers.append(label)
 
 
   # #%%
@@ -279,6 +282,6 @@ def plot_conn_graph(layout_df, conn_df, language_df, path_save, plot_fname, plot
   output_file(filename=path_save +plot_fname, title=plot_title)
   save(plot)
 
-  return plot
+  return plot, degrees_ori
 
 
